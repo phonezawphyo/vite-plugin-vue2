@@ -132,7 +132,21 @@ var __component__ = /*#__PURE__*/__normalizer(
 
   // SSR module registration by wrapping user setup
   if (ssr) {
-    // TODO
+    const normalizedPath = path.normalize(path.relative(options.root, filename));
+    let moduleId = JSON.stringify(normalizedPath);
+    output.push(`
+      const _ssr_prev_beforeCreate = __component__.options.beforeCreate
+      __component__.options.beforeCreate = function() {
+        const ctx = this.$ssrContext;
+        ctx.modules = ctx.modules || [];
+        if (!ctx.modules.includes(${moduleId})) {
+          ctx.modules.push(${moduleId});
+        }
+        if (_prev_beforeCreate) {
+          _prev_beforeCreate.bind(this)();
+        }
+      };
+    `)
   }
 
   let resolvedMap: RawSourceMap | undefined = scriptMap
